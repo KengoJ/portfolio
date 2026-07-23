@@ -91,7 +91,28 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </section>
 
     <section id="contact" class="contact" aria-labelledby="contact-title">
-      <div class="contact__inner reveal"><p class="eyebrow">CONTACT</p><h2 id="contact-title">お問い合わせ</h2><p>ご覧いただき、ありがとうございます。</div>
+      <div class="contact__inner reveal">
+        <p class="eyebrow">CONTACT</p>
+        <h2 id="contact-title">お問い合わせ</h2>
+        <p>ご覧いただき、ありがとうございます。<br>ご相談やご質問がありましたら、以下のフォームからご連絡ください。</p>
+        <p id="required-note" class="contact-form__required"><span aria-hidden="true">*</span> すべて必須項目です</p>
+        <form id="contact-form" class="contact-form" action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSfPZAdGGyRRUuJrxOLI69pQ5m_e6OG103k9jrzJrHPu3FN5rw/formResponse" method="post" aria-describedby="required-note">
+          <div class="contact-form__field">
+            <label for="contact-name">お名前 <span aria-hidden="true">*</span></label>
+            <input id="contact-name" name="entry.583905775" type="text" autocomplete="name" required>
+          </div>
+          <div class="contact-form__field">
+            <label for="contact-email">メールアドレス <span aria-hidden="true">*</span></label>
+            <input id="contact-email" name="entry.596114793" type="email" autocomplete="email" inputmode="email" required>
+          </div>
+          <div class="contact-form__field">
+            <label for="contact-message">お問い合わせ内容 <span aria-hidden="true">*</span></label>
+            <textarea id="contact-message" name="entry.276379017" rows="7" required></textarea>
+          </div>
+          <button class="contact-form__submit" type="submit">送信する <span aria-hidden="true">→</span></button>
+          <p id="contact-status" class="contact-form__status" aria-live="polite"></p>
+        </form>
+      </div>
     </section>
   </main>
   <footer class="site-footer">
@@ -111,6 +132,39 @@ nav.querySelectorAll('a').forEach((link) => link.addEventListener('click', () =>
   menuButton.setAttribute('aria-expanded', 'false')
   nav.classList.remove('is-open')
 }))
+
+const contactForm = document.querySelector<HTMLFormElement>('#contact-form')!
+const contactSubmit = contactForm.querySelector<HTMLButtonElement>('button[type="submit"]')!
+const contactStatus = document.querySelector<HTMLParagraphElement>('#contact-status')!
+
+contactForm.addEventListener('submit', async (event) => {
+  event.preventDefault()
+
+  if (!contactForm.reportValidity()) return
+
+  contactSubmit.disabled = true
+  contactSubmit.textContent = '送信中…'
+  contactStatus.textContent = ''
+  contactStatus.className = 'contact-form__status'
+
+  try {
+    await fetch(contactForm.action, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: new FormData(contactForm),
+    })
+
+    contactForm.reset()
+    contactStatus.textContent = 'お問い合わせを送信しました。ありがとうございます。'
+    contactStatus.classList.add('is-success')
+  } catch {
+    contactStatus.textContent = '送信できませんでした。通信環境をご確認のうえ、もう一度お試しください。'
+    contactStatus.classList.add('is-error')
+  } finally {
+    contactSubmit.disabled = false
+    contactSubmit.textContent = '送信する →'
+  }
+})
 
 const observer = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
